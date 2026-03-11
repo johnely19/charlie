@@ -1,10 +1,17 @@
 import { NextRequest, NextResponse } from "next/server";
 
 export async function POST(req: NextRequest) {
-  const auth = req.headers.get("authorization") || "";
-  const expected = `Bearer ${process.env.OPENCLAW_WEBHOOK_SECRET}`;
+  const secret = process.env.OPENCLAW_WEBHOOK_SECRET || "";
 
-  if (auth !== expected) {
+  const auth = req.headers.get("authorization") || "";
+  const headerExpected = `Bearer ${secret}`;
+
+  const url = new URL(req.url);
+  const token = url.searchParams.get("token") || "";
+
+  const authorized = auth === headerExpected || token === secret;
+
+  if (!authorized) {
     return NextResponse.json({ ok: false, error: "unauthorized" }, { status: 401 });
   }
 
