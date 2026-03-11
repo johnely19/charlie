@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import { Redis } from "@upstash/redis";
+import { kv } from "@vercel/kv";
 
-const redis = Redis.fromEnv();
 const KEY = "briefings";
 
 export async function POST(req: NextRequest) {
@@ -27,14 +26,14 @@ export async function POST(req: NextRequest) {
     payload,
   };
 
-  await redis.lpush(KEY, JSON.stringify(item));
-  await redis.ltrim(KEY, 0, 199);
+  await kv.lpush(KEY, JSON.stringify(item));
+  await kv.ltrim(KEY, 0, 199);
 
   return NextResponse.json({ ok: true, id: item.id });
 }
 
 export async function GET() {
-  const rows = (await redis.lrange<string[]>(KEY, 0, 49)) || [];
+  const rows = (await kv.lrange<string[]>(KEY, 0, 49)) || [];
   const items = rows.map((r: string) => {
     try { return JSON.parse(r); } catch { return { raw: r }; }
   });
