@@ -33,9 +33,9 @@ export async function POST(req: NextRequest) {
 }
 
 export async function GET() {
-  const rows = (await kv.lrange<string[]>(KEY, 0, 49)) || [];
-  const items = rows.map((r: string) => {
-    try { return JSON.parse(r); } catch { return { raw: r }; }
-  });
+const rows = ((await kv.lrange(KEY, 0, 49)) || []) as string[];
+const items = rows.map((r) => {
+  try { return JSON.parse(r); } catch { return { raw: r }; }
+});
   return NextResponse.json({ ok: true, count: items.length, items });
 }
