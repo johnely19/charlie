@@ -4,19 +4,22 @@ export async function POST(req: NextRequest) {
   const secret = process.env.OPENCLAW_WEBHOOK_SECRET || "";
 
   const auth = req.headers.get("authorization") || "";
-  const headerExpected = `Bearer ${secret}`;
+  const token = new URL(req.url).searchParams.get("token") || "";
 
-  const url = new URL(req.url);
-  const token = url.searchParams.get("token") || "";
-
-  const authorized = auth === headerExpected || token === secret;
-
-  if (!authorized) {
+  const okAuth = auth === `Bearer ${secret}` || token === secret;
+  if (!okAuth) {
     return NextResponse.json({ ok: false, error: "unauthorized" }, { status: 401 });
   }
 
-  const payload = await req.json();
-  console.log("briefing payload", JSON.stringify(payload).slice(0, 2000));
+  let payload: any = null;
+  try {
+    const text = await req.text();
+    payload = text ? JSON.parse(text) : { raw: "" };
+  } catch {
+    payload = { raw: "non-json-or-empty" };
+  }
+
+  console.log("briefing payload:", payload);
 
   return NextResponse.json({ ok: true, receivedAt: new Date().toISOString() });
 }
